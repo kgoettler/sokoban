@@ -1,2 +1,3 @@
 # sokoban
-Sokoban game in ANSI C
+
+A Sokoban game written in ANSI C.
