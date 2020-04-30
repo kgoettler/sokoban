@@ -10,6 +10,11 @@ struct element {
     int y;
 };
 
+struct sokoban_t {
+    struct element player;
+    struct element box;
+};
+
 void check_boundary(struct element * s);
 void move_left(struct element * s);
 void move_right(struct element * s);
@@ -21,8 +26,7 @@ void set_position(struct element * s, int x, int y);
 int main (void)
 {
     /* Initialize variables */
-    struct element ball;
-    struct element box;
+    struct sokoban_t game;
     int key;
 
     /* Initialize ncurses session */
@@ -35,80 +39,80 @@ int main (void)
     keypad(stdscr, TRUE);
     
     /* Assign variables */
-    ball.x = COLS / 2;
-    ball.y = LINES / 2;
-    box.x = COLS / 2 + 1;
-    box.y = LINES / 2;
+    game.player.x = COLS / 2;
+    game.player.y = LINES / 2;
+    game.box.x = COLS / 2 + 1;
+    game.box.y = LINES / 2;
     key = 0;
 
     /* Draw + wait for input */
-    mvprintw(ball.y, ball.x, "o");
-    mvprintw(box.y, box.x, "@");
+    mvprintw(game.player.y, game.player.x, "o");
+    mvprintw(game.box.y, game.box.x, "@");
     /* Process input */
     while ((key = getch()) != 'q')
     {
-        /* Change ball position */
+        /* Change game.player position */
         switch (key)
         {
             case ('h'):
             case (KEY_LEFT):
-                move_left(&ball);
-                if (same_position(&ball, &box) == 0)
+                move_left(&game.player);
+                if (same_position(&game.player, &game.box) == 0)
                 {
-                    if (ball.x != 0)
-                        move_left(&box);
+                    if (game.player.x != 0)
+                        move_left(&game.box);
                     else
-                        move_right(&ball);
+                        move_right(&game.player);
                 }
                 break;
             case ('l'):
             case (KEY_RIGHT):
-                move_right(&ball);
-                if (same_position(&ball, &box) == 0)
+                move_right(&game.player);
+                if (same_position(&game.player, &game.box) == 0)
                 {
-                    if (ball.x != COLS - 1)
-                        move_right(&box);
+                    if (game.player.x != COLS - 1)
+                        move_right(&game.box);
                     else
-                        move_left(&ball);
+                        move_left(&game.player);
                 }
                 break;
             case ('k'):
             case (KEY_UP):
-                move_up(&ball);
-                if (same_position(&ball, &box) == 0)
+                move_up(&game.player);
+                if (same_position(&game.player, &game.box) == 0)
                 {
-                    if (ball.y != 0)
-                        move_up(&box);
+                    if (game.player.y != 0)
+                        move_up(&game.box);
                     else
-                        move_down(&ball);
+                        move_down(&game.player);
                 }
                 break;
             case ('j'):
             case (KEY_DOWN):
-                move_down(&ball);
-                if (same_position(&ball, &box) == 0)
+                move_down(&game.player);
+                if (same_position(&game.player, &game.box) == 0)
                 {
-                    if (ball.y != LINES - 1)
-                        move_down(&box);
+                    if (game.player.y != LINES - 1)
+                        move_down(&game.box);
                     else
-                        move_up(&ball);
+                        move_up(&game.player);
                 }
                 break;
             case ('r'):
-                ball.x = COLS / 2;
-                ball.y = LINES / 2;
-                box.x = ball.x + 1;
-                box.y = ball.y;
+                game.player.x = COLS / 2;
+                game.player.y = LINES / 2;
+                game.box.x = game.player.x + 1;
+                game.box.y = game.player.y;
             default:
                 break;
         }
         /* Check x,y */
-        check_boundary(&ball);
+        check_boundary(&game.player);
 
         /* Redraw */
         clear();
-        mvprintw(ball.y, ball.x, "o");
-        mvprintw(box.y, box.x, "@");
+        mvprintw(game.player.y, game.player.x, "o");
+        mvprintw(game.box.y, game.box.x, "@");
     }
     endwin();
     return 0;
