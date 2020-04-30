@@ -20,6 +20,11 @@ void set_position(struct element * s, int x, int y);
 
 int main (void)
 {
+    /* Initialize variables */
+    struct element ball;
+    struct element box;
+    int key;
+
     /* Initialize ncurses session */
     initscr();
     /* Do not echo character input to screen */
@@ -29,14 +34,17 @@ int main (void)
     /* Accept function keys/arrow keys */
     keypad(stdscr, TRUE);
     
-    /* Add ball and box */
-    struct element ball = { COLS / 2, LINES / 2 };
-    struct element box = { COLS / 2 + 1, LINES / 2 };
+    /* Assign variables */
+    ball.x = COLS / 2;
+    ball.y = LINES / 2;
+    box.x = COLS / 2 + 1;
+    box.y = LINES / 2;
+    key = 0;
+
+    /* Draw + wait for input */
     mvprintw(ball.y, ball.x, "o");
     mvprintw(box.y, box.x, "@");
-
     /* Process input */
-    int key = 0;
     while ((key = getch()) != 'q')
     {
         /* Change ball position */
