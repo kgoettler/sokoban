@@ -7,7 +7,6 @@
 #include <stdlib.h>
 #include "sokoban.h"
 
-
 enum {
     OPEN,
     WALL,
@@ -15,16 +14,31 @@ enum {
     PLAYER
 };
 
-char * map = "##########\n"
-                   "#        #\n"
-                   "#        #\n"
-                   "#        #\n"
-                   "#  PB    #\n"
-                   "#   B    #\n"
-                   "#        #\n"
-                   "#        #\n"
-                   "#        #\n"
-                   "##########\n";
+enum {
+    MOVE_LEFT,
+    MOVE_RIGHT,
+    MOVE_UP,
+    MOVE_DOWN
+};
+
+typedef struct sokoban_t {
+    int pos;
+    int height;
+    int width;
+    int size;
+    int * map;
+} sokoban_t;
+
+char * map = "# ########\n"
+             "#        #\n"
+             "#        #\n"
+             "#        #\n"
+             "#  PB    #\n"
+             "#   B    #\n"
+             "#        #\n"
+             "#        #\n"
+             "#        #\n"
+             "##########\n";
 
 int read_map(sokoban_t * game, char * map)
 {
@@ -50,7 +64,8 @@ int read_map(sokoban_t * game, char * map)
     }
     game->width = width;
     game->height = height;
-    game->map = malloc(sizeof(int) * height * width);
+    game->size = width * height;
+    game->map = malloc(sizeof(int) * game->size);
     for (s = map, pos = 0; *s != '\0'; s++, pos++) {
         switch (*s)
         {
@@ -62,6 +77,7 @@ int read_map(sokoban_t * game, char * map)
                 break;
             case 'P':
                 game->map[pos] = PLAYER;
+                game->pos = pos;
                 break;
             case 'B':
                 game->map[pos] = BOX;
@@ -97,9 +113,6 @@ void draw_map(sokoban_t * game)
         printf("%d %d\n", x, y);
         switch (game->map[i])
         {
-            case OPEN:
-                /*mvaddstr(y, x, " ");*/
-                break;
             case WALL:
                 mvaddstr(y, x, "#");
                 break;
@@ -114,35 +127,91 @@ void draw_map(sokoban_t * game)
     return;
 }
 
-int main (void)
+void resolve_move(sokoban_t * game, int move)
 {
-    /* Initialize variables */
-    sokoban_t game;
-    int key, res;
+    int dxy, next_pos, next_elem;
+    switch (move)
+    {
+        case MOVE_LEFT:
+            dxy = -1;
+            break;
+        case MOVE_RIGHT:
+            dxy = 1;
+            break;
+        case MOVE_UP:
+            dxy = -game->width;
+            break;
+        case MOVE_DOWN:
+            dxy = game->width;
+            break;
+    }
+    /* Check that next position exists */
+    next_pos = game->pos + dxy;
+    if (check_pos(game, next_pos))
+        terminate(game, 1);
+    next_elem = game->map[next_pos];
     
-    /* Initialize ncurses session */
+    /* Check for wall */
+    if (next_elem != WALL)
+    {
+        if (next_elem == BOX)
+        {
+            if (check_pos(game, next_pos + dxy)) 
+                terminate(game, 1);
+            if (game->map[next_pos+dxy] == OPEN)
+            {
+                game->map[next_pos+dxy] = BOX;
+                game->map[next_pos] = PLAYER;
+                game->map[game->pos] = OPEN;
+                game->pos = next_pos;
+            }
+        }
+        else
+        {
+            if (check_pos(game, next_pos)) 
+                terminate(game, 1);
+            game->map[next_pos] = PLAYER;
+            game->map[game->pos] = OPEN;
+            game->pos = next_pos;
+        }
+    }
+    return;
+}
+
+int check_pos(sokoban_t * game, int pos)
+{
+    if (pos < 0 || pos > game->size)
+        return 1;
+    return 0;
+}
+
+int terminate(sokoban_t * game, int code)
+{
+    free(game->map);
+    endwin();
+    if (code == 1)
+    {
+        printf("Fatal error." 
+               "Attempted to access memory beyond bounds of map.\n"
+               "(Is your map not fully enclosed by walls?)");
+        exit(code);
+    }
+    return 0;
+}
+
+int setup (void)
+{
     initscr();
-    /* Do not echo character input to screen */
     noecho();
-    /* Hide cursor */
     curs_set(0);
-    /* Accept function keys/arrow keys */
     keypad(stdscr, TRUE);
-    
-    /* Assign variables */
-    game.player.x = COLS / 2;
-    game.player.y = LINES / 2;
-    game.box.x = COLS / 2 + 1;
-    game.box.y = LINES / 2;
-    key = 0;
+    return 0;
+}
 
-    /* Read map */
-    res = read_map(&game, map);
-    draw_map(&game);
-
-    /* Draw + wait for input */
-    mvaddstr(game.player.y, game.player.x, "o");
-    mvaddstr(game.box.y, game.box.x, "@");
+int play(sokoban_t * game)
+{
+    int key;
+    draw_map(game);
     /* Process input */
     while ((key = getch()) != 'q')
     {
@@ -151,118 +220,41 @@ int main (void)
         {
             case ('h'):
             case (KEY_LEFT):
-                move_left(&game.player);
-                if (same_position(&game.player, &game.box) == 0)
-                {
-                    if (game.player.x != 0)
-                        move_left(&game.box);
-                    else
-                        move_right(&game.player);
-                }
+                resolve_move(game, MOVE_LEFT);
                 break;
             case ('l'):
             case (KEY_RIGHT):
-                move_right(&game.player);
-                if (same_position(&game.player, &game.box) == 0)
-                {
-                    if (game.player.x != COLS - 1)
-                        move_right(&game.box);
-                    else
-                        move_left(&game.player);
-                }
+                resolve_move(game, MOVE_RIGHT);
                 break;
             case ('k'):
             case (KEY_UP):
-                move_up(&game.player);
-                if (same_position(&game.player, &game.box) == 0)
-                {
-                    if (game.player.y != 0)
-                        move_up(&game.box);
-                    else
-                        move_down(&game.player);
-                }
+                resolve_move(game, MOVE_UP);
                 break;
             case ('j'):
             case (KEY_DOWN):
-                move_down(&game.player);
-                if (same_position(&game.player, &game.box) == 0)
-                {
-                    if (game.player.y != LINES - 1)
-                        move_down(&game.box);
-                    else
-                        move_up(&game.player);
-                }
+                resolve_move(game, MOVE_DOWN);
                 break;
             case ('r'):
-                game.player.x = COLS / 2;
-                game.player.y = LINES / 2;
-                game.box.x = game.player.x + 1;
-                game.box.y = game.player.y;
             default:
                 break;
         }
-        /* Check x,y */
-        check_boundary(&game.player);
-
         /* Redraw */
         clear();
-        mvprintw(game.player.y, game.player.x, "o");
-        mvprintw(game.box.y, game.box.x, "@");
-        draw_map(&game);
+        draw_map(game);
     }
-    /* Free up variables */
-    free(game.map);
-    endwin();
     return 0;
 }
 
-void check_boundary(struct element * s)
+int main (void)
 {
-    if (s->x < 0)
-        s->x = 0;
-    if (s->x >= COLS)
-        s->x = COLS - 1;
-    if (s->y < 0)
-        s->y = 0;
-    if (s->y >= LINES)
-        s->y = LINES - 1;
-    return;
-}
-
-int same_position(struct element * s1, struct element * s2)
-{
-    if ((s1->x == s2->x) && (s1->y == s2->y))
-        return 0;
-    return 1;
-}
-
-void move_left(struct element * s)
-{
-    s->x -= 1;
-    return;
-}
-
-void move_right(struct element * s)
-{
-    s->x += 1;
-    return;
-}
-
-void move_up(struct element * s)
-{
-    s->y -= 1;
-    return;
-}
-
-void move_down(struct element * s)
-{
-    s->y += 1;
-    return;
-}
-
-void set_position(struct element * s, int x, int y)
-{
-    s->x = x;
-    s->y = y;
-    return;
+    sokoban_t game;
+    /* Initialize ncurses session */
+    setup();
+    /* Read + draw map */
+    read_map(&game, map);
+    /* Loop */
+    play(&game);
+    /* Free up variables */
+    terminate(&game, 0);
+    return 0;
 }
