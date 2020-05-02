@@ -114,13 +114,6 @@ void draw_map(sokoban_t * game)
     return;
 }
 
-void fuck(sokoban_t game)
-{
-    printf("%d %d\n", game.width, game.height);
-    return;
-}
-
-
 int main (void)
 {
     /* Initialize variables */
