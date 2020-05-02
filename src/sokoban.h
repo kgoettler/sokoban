@@ -3,10 +3,13 @@ struct element {
     int y;
 };
 
-struct sokoban_t {
+typedef struct sokoban_t {
     struct element player;
     struct element box;
-};
+    int height;
+    int width;
+    int * map;
+} sokoban_t;
 
 void check_boundary(struct element * s);
 void move_left(struct element * s);
