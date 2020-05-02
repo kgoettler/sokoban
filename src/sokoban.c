@@ -5,7 +5,6 @@
 
 #include <curses.h>
 #include <stdlib.h>
-#include "sokoban.h"
 
 enum {
     OPEN,
