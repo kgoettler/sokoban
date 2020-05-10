@@ -28,7 +28,7 @@ typedef struct sokoban_t {
     int * map;
 } sokoban_t;
 
-char * map = "# ########\n"
+char * map = "##########\n"
              "#        #\n"
              "#        #\n"
              "#        #\n"
@@ -38,6 +38,20 @@ char * map = "# ########\n"
              "#        #\n"
              "#        #\n"
              "##########\n";
+
+/*
+char * map = "      #####\n"
+             "      #   #\n"
+             "      #   #\n"
+             "      #   #\n"
+             "      #   #\n"
+             "#######   #\n"
+             "#         #\n"
+             "#  P  B   #\n"
+             "#     B   #\n"
+             "#         #\n"
+             "###########\n";
+*/
 
 int read_map(sokoban_t * game, char * map)
 {
@@ -189,10 +203,10 @@ int terminate(sokoban_t * game, int code)
     free(game->map);
     endwin();
     if (code == 1)
-    {
-        printf("Fatal error." 
+    { 
+        printf("Fatal error. " 
                "Attempted to access memory beyond bounds of map.\n"
-               "(Is your map not fully enclosed by walls?)");
+               "(Is your map not fully enclosed by walls?)\n");
         exit(code);
     }
     return 0;
