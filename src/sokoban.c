@@ -5,28 +5,7 @@
 
 #include <curses.h>
 #include <stdlib.h>
-
-enum {
-    OPEN,
-    WALL,
-    BOX,
-    PLAYER
-};
-
-enum {
-    MOVE_LEFT,
-    MOVE_RIGHT,
-    MOVE_UP,
-    MOVE_DOWN
-};
-
-typedef struct sokoban_t {
-    int pos;
-    int height;
-    int width;
-    int size;
-    int * map;
-} sokoban_t;
+#include "sokoban.h"
 
 char * map = "##########\n"
              "#        #\n"
@@ -52,6 +31,20 @@ char * map = "      #####\n"
              "#         #\n"
              "###########\n";
 */
+
+int main (void)
+{
+    sokoban_t game;
+    /* Initialize ncurses session */
+    setup();
+    /* Read + draw map */
+    read_map(&game, map);
+    /* Loop */
+    play(&game);
+    /* Free up variables */
+    terminate(&game, 0);
+    return 0;
+}
 
 int read_map(sokoban_t * game, char * map)
 {
@@ -228,7 +221,7 @@ int play(sokoban_t * game)
     /* Process input */
     while ((key = getch()) != 'q')
     {
-        /* Change game.player position */
+        /* Change player position */
         switch (key)
         {
             case ('h'):
@@ -248,7 +241,7 @@ int play(sokoban_t * game)
                 resolve_move(game, MOVE_DOWN);
                 break;
             case ('r'):
-            default:
+            gefault:
                 break;
         }
         /* Redraw */
@@ -258,16 +251,3 @@ int play(sokoban_t * game)
     return 0;
 }
 
-int main (void)
-{
-    sokoban_t game;
-    /* Initialize ncurses session */
-    setup();
-    /* Read + draw map */
-    read_map(&game, map);
-    /* Loop */
-    play(&game);
-    /* Free up variables */
-    terminate(&game, 0);
-    return 0;
-}
